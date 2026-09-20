@@ -3,44 +3,51 @@ import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
 class ProductApiService {
-  static const String baseUrl = '';
+  static const String baseUrl = String.fromEnvironment('API_BASE_URL');
+  final http.Client _client;
+  final String _baseUrl;
+
+  ProductApiService({http.Client? client, String? apiBaseUrl})
+    : _client = client ?? http.Client(),
+      _baseUrl = apiBaseUrl ?? baseUrl;
+
+  Uri _uri([String? id]) {
+    final base = Uri.tryParse(_baseUrl);
+    if (base == null ||
+        !base.hasAuthority ||
+        !['http', 'https'].contains(base.scheme)) {
+      throw StateError(
+        'Set the instructor API URL with --dart-define=API_BASE_URL=https://your-api.example',
+      );
+    }
+    final path = base.path.replaceFirst(RegExp(r'/+$'), '');
+    return base.replace(
+      path: '$path/products${id == null ? '' : '/${Uri.encodeComponent(id)}'}',
+    );
+  }
+
+  void close() => _client.close();
   Future<List<Product>> getProducts() async {
     try {
-      // TODO:
-      // 1. สร้าง URL สำหรับ GET /products
-      // 2. เรียก http.get()
-      // 3. ตรวจสอบ statusCode
-      // 4. ใช้ jsonDecode() แปลง response.body
-      // 5. แปลง JSON List เป็น List<Product>
-
-      // throw UnimplementedError();
-      final res = await http.get(Uri.parse('$baseUrl/products'));
+      final res = await _client.get(_uri());
 
       if (res.statusCode == 200) {
-        return jsonDecode(
-          res.body,
-        ).map((json) => Product.fromJson(json)).toList();
+        final data = jsonDecode(res.body) as List<dynamic>;
+        return data
+            .map((json) => Product.fromJson(json as Map<String, dynamic>))
+            .toList();
       } else {
         throw Exception('Failed to load products');
       }
     } catch (e) {
-      // TODO: ส่งต่อข้อผิดพลาดให้หน้าจอนำไปแสดงผล
       rethrow;
     }
   }
 
   Future<Product> addProduct(Product product) async {
     try {
-      // TODO:
-      // 1. เรียก http.post()
-      // 2. กำหนด Content-Type เป็น application/json
-      // 3. ส่งข้อมูล product.toJson() ด้วย jsonEncode()
-      // 4. ตรวจสอบ Status Code
-      // 5. แปลง Response กลับเป็น Product
-      //throw UnimplementedError();
-
-      final res = await http.post(
-        Uri.parse('$baseUrl/products'),
+      final res = await _client.post(
+        _uri(),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode(product.toJson()),
       );
@@ -56,13 +63,11 @@ class ProductApiService {
   }
 
   Future<Product> updateProduct(Product product) async {
-    // TODO:
-    // เรียก HTTP PUT ทีF /products/{id}
-    // ส่งข้อมูลด้วย jsonEncode(product.toJson())
     try {
-      final res = await http.put(Uri.parse('$baseUrl/products/${product.id}'),
+      final res = await _client.put(
+        _uri(product.id),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode(product.toJson())
+        body: jsonEncode(product.toJson()),
       );
 
       if (res.statusCode == 200) {
@@ -73,15 +78,11 @@ class ProductApiService {
     } catch (e) {
       rethrow;
     }
-    //throw UnimplementedError();
   }
 
   Future<void> deleteProduct(String id) async {
-    // TODO:
-    // เรียก HTTP DELETE ทีF /products/{id}
-    // ตรวจสอบ Status Code ทีFเหมาะสม
     try {
-      final res = await http.delete(Uri.parse('$baseUrl/products/$id'));
+      final res = await _client.delete(_uri(id));
 
       if (res.statusCode != 200 && res.statusCode != 204) {
         throw Exception('Failed to delete product');

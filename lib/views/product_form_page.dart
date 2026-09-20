@@ -30,24 +30,18 @@ class _ProductFormPageState extends State<ProductFormPage> {
       _isAvailable = widget.product!.isAvailable;
     }
   }
+
   @override
   void dispose() {
     _nameController.dispose();
     _categoryController.dispose();
     _priceController.dispose();
+    _apiService.close();
     super.dispose();
   }
 
   Future<void> _saveProduct() async {
-    // TODO:
-    // 1. ตรวจสอบข้อมูลใน Form
-    // 2. เปลีFยน _isSaving เป็น true
-    // 3. สร้าง Product object
-    // 4. เรียก addProduct()
-    // 5. เมืFอสำเร็จ Navigator.pop(context, true)
-    // 6. จัดการ Error ด้วย try-catch
-    // 7. ตรวจ mounted ก่อน setState หลัง await
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSaving || !_formKey.currentState!.validate()) return;
 
     setState(() {
       _isSaving = true;
@@ -55,8 +49,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
     final item = Product(
       id: widget.product?.id ?? '',
-      name: _nameController.text,
-      category: _categoryController.text,
+      name: _nameController.text.trim(),
+      category: _categoryController.text.trim(),
       price: double.parse(_priceController.text),
       isAvailable: _isAvailable,
     );
@@ -74,11 +68,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('เกิดข้อผิดพลาด: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('เกิดข้อผิดพลาด: $e')));
 
       setState(() {
         _isSaving = false;
@@ -91,9 +83,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
     final isEdit = widget.product != null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdit ? 'แก้ไขสินค้า' : 'เพิ่มสินค้า'),
-      ),
+      appBar: AppBar(title: Text(isEdit ? 'แก้ไขสินค้า' : 'เพิ่มสินค้า')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -102,9 +92,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'ชื่อสินค้า',
-                ),
+                decoration: const InputDecoration(labelText: 'ชื่อสินค้า'),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'กรุณากรอกชื่อสินค้า';
@@ -117,9 +105,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(
-                  labelText: 'หมวดหมู่',
-                ),
+                decoration: const InputDecoration(labelText: 'หมวดหมู่'),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'กรุณากรอกหมวดหมู่';
@@ -132,10 +118,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
               TextFormField(
                 controller: _priceController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'ราคา',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
                 ),
+                decoration: const InputDecoration(labelText: 'ราคา'),
                 validator: (value) {
                   final price = double.tryParse(value ?? '');
 
@@ -143,7 +129,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     return 'กรุณากรอกราคาเป็นตัวเลข';
                   }
 
-                  if (price <= 0) {
+                  if (!price.isFinite || price <= 0) {
                     return 'ราคาต้องมากกว่า 0';
                   }
 

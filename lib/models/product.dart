@@ -13,29 +13,21 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-    // TODO:
-    // 1. รับค่าจาก JSON
-    // 2. แปลงข้อมูลให้ตรงกับชนิดข้อมูลของ Product
-    // 3. คืนค่า Product object
-    // throw UnimplementedError();
     return Product(
-        id: json['id'].toString(),
-        name: json['name'].toString(),
-        category: json['category'].toString(),
-        price: (json['price'] as num).toDouble(),
-        isAvailable: json['isAvailable'] as bool
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      category: (json['category'] ?? '').toString(),
+      price: ((json['price'] ?? 0) as num).toDouble(),
+      isAvailable: (json['isAvailable'] as bool?) ?? false,
     );
   }
   Map<String, dynamic> toJson() {
-    // TODO:
-    // แปลง Product object เป็น Map<String, dynamic>
-    // throw UnimplementedError();
     return {
       'id': id,
       'name': name,
       'category': category,
       'price': price,
-      'isAvailable': isAvailable
+      'isAvailable': isAvailable,
     };
   }
 }
