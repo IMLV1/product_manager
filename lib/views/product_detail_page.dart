@@ -10,16 +10,16 @@ Future<bool> confirmProductDelete(
     await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete product?'),
-        content: Text('Delete ${product.name}?'),
+        title: const Text('ยืนยันการลบสินค้า'),
+        content: Text('ต้องการลบ ${product.name} หรือไม่?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('ยกเลิก'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: const Text('ลบ'),
           ),
         ],
       ),
@@ -36,12 +36,6 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   final _api = ProductApiService();
   bool _busy = false;
-  @override
-  void dispose() {
-    _api.close();
-    super.dispose();
-  }
-
   Future<void> _edit() async {
     final changed = await Navigator.push<bool>(
       context,
@@ -67,7 +61,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       setState(() => _busy = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+      ).showSnackBar(SnackBar(content: Text('ลบสินค้าไม่สำเร็จ: $e')));
     }
   }
 
@@ -75,30 +69,32 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     final product = widget.product;
     return Scaffold(
-      appBar: AppBar(title: const Text('Product details')),
+      appBar: AppBar(title: const Text('รายละเอียดสินค้า')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(product.name, style: Theme.of(context).textTheme.headlineSmall),
           ListTile(
-            title: const Text('Category'),
+            title: const Text('หมวดหมู่'),
             subtitle: Text(product.category),
           ),
           ListTile(
-            title: const Text('Price'),
-            subtitle: Text('${product.price.toStringAsFixed(2)} THB'),
+            title: const Text('ราคา'),
+            subtitle: Text('${product.price.toStringAsFixed(2)} บาท'),
           ),
           ListTile(
-            title: const Text('Availability'),
-            subtitle: Text(product.isAvailable ? 'Available' : 'Unavailable'),
+            title: const Text('สถานะพร้อมจำหน่าย'),
+            subtitle: Text(
+              product.isAvailable ? 'พร้อมจำหน่าย' : 'ไม่พร้อมจำหน่าย',
+            ),
           ),
           ElevatedButton(
             onPressed: _busy ? null : _edit,
-            child: const Text('Edit'),
+            child: const Text('แก้ไข'),
           ),
           TextButton(
             onPressed: _busy ? null : _delete,
-            child: const Text('Delete'),
+            child: const Text('ลบ'),
           ),
           if (_busy) const Center(child: CircularProgressIndicator()),
         ],

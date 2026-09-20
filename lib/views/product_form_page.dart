@@ -36,7 +36,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _nameController.dispose();
     _categoryController.dispose();
     _priceController.dispose();
-    _apiService.close();
     super.dispose();
   }
 

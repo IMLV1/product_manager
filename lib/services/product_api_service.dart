@@ -3,33 +3,12 @@ import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
 class ProductApiService {
-  static const String baseUrl = String.fromEnvironment('API_BASE_URL');
-  final http.Client _client;
-  final String _baseUrl;
+  // ใส่ URL ของ API ที่อาจารย์กำหนด
+  static const String baseUrl = '';
 
-  ProductApiService({http.Client? client, String? apiBaseUrl})
-    : _client = client ?? http.Client(),
-      _baseUrl = apiBaseUrl ?? baseUrl;
-
-  Uri _uri([String? id]) {
-    final base = Uri.tryParse(_baseUrl);
-    if (base == null ||
-        !base.hasAuthority ||
-        !['http', 'https'].contains(base.scheme)) {
-      throw StateError(
-        'Set the instructor API URL with --dart-define=API_BASE_URL=https://your-api.example',
-      );
-    }
-    final path = base.path.replaceFirst(RegExp(r'/+$'), '');
-    return base.replace(
-      path: '$path/products${id == null ? '' : '/${Uri.encodeComponent(id)}'}',
-    );
-  }
-
-  void close() => _client.close();
   Future<List<Product>> getProducts() async {
     try {
-      final res = await _client.get(_uri());
+      final res = await http.get(Uri.parse('$baseUrl/products'));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as List<dynamic>;
@@ -46,8 +25,8 @@ class ProductApiService {
 
   Future<Product> addProduct(Product product) async {
     try {
-      final res = await _client.post(
-        _uri(),
+      final res = await http.post(
+        Uri.parse('$baseUrl/products'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode(product.toJson()),
       );
@@ -64,8 +43,8 @@ class ProductApiService {
 
   Future<Product> updateProduct(Product product) async {
     try {
-      final res = await _client.put(
-        _uri(product.id),
+      final res = await http.put(
+        Uri.parse('$baseUrl/products/${product.id}'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode(product.toJson()),
       );
@@ -82,7 +61,7 @@ class ProductApiService {
 
   Future<void> deleteProduct(String id) async {
     try {
-      final res = await _client.delete(_uri(id));
+      final res = await http.delete(Uri.parse('$baseUrl/products/$id'));
 
       if (res.statusCode != 200 && res.statusCode != 204) {
         throw Exception('Failed to delete product');
