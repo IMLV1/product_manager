@@ -12,12 +12,14 @@ class ProductApiService {
       // 3. ตรวจสอบ statusCode
       // 4. ใช้ jsonDecode() แปลง response.body
       // 5. แปลง JSON List เป็น List<Product>
-      
+
       // throw UnimplementedError();
       final res = await http.get(Uri.parse('$baseUrl/products'));
 
       if (res.statusCode == 200) {
-        return jsonDecode(res.body).map((json) => Product.fromJson(json)).toList();
+        return jsonDecode(
+          res.body,
+        ).map((json) => Product.fromJson(json)).toList();
       } else {
         throw Exception('Failed to load products');
       }
@@ -37,15 +39,52 @@ class ProductApiService {
       // 5. แปลง Response กลับเป็น Product
       //throw UnimplementedError();
 
-      final res = await http.post(Uri.parse('$baseUrl/products'),
-        headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-        body: jsonEncode(product.toJson())
+      final res = await http.post(
+        Uri.parse('$baseUrl/products'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(product.toJson()),
       );
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         return Product.fromJson(jsonDecode(res.body));
       } else {
         throw Exception('Failed to add product');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Product> updateProduct(Product product) async {
+    // TODO:
+    // เรียก HTTP PUT ทีF /products/{id}
+    // ส่งข้อมูลด้วย jsonEncode(product.toJson())
+    try {
+      final res = await http.put(Uri.parse('$baseUrl/products/${product.id}'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(product.toJson())
+      );
+
+      if (res.statusCode == 200) {
+        return Product.fromJson(jsonDecode(res.body));
+      } else {
+        throw Exception('Failed to update product');
+      }
+    } catch (e) {
+      rethrow;
+    }
+    //throw UnimplementedError();
+  }
+
+  Future<void> deleteProduct(String id) async {
+    // TODO:
+    // เรียก HTTP DELETE ทีF /products/{id}
+    // ตรวจสอบ Status Code ทีFเหมาะสม
+    try {
+      final res = await http.delete(Uri.parse('$baseUrl/products/$id'));
+
+      if (res.statusCode != 200 && res.statusCode != 204) {
+        throw Exception('Failed to delete product');
       }
     } catch (e) {
       rethrow;
